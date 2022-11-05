@@ -16,6 +16,16 @@
 - name: Get instance info
   include_tasks: get_instance_information.yml
 
+#- name: Initialize my_snaps to empty
+#  delegate_to: localhost
+#  set_fact:
+#    my_snaps: []
+#
+#- name: Initialize my_vols to empty
+#  delegate_to: localhost
+#  set_fact:
+#    my_vols: []
+
 - name: Clone Instance Volumes
   include_tasks: clone_volumes.yml
   vars:
