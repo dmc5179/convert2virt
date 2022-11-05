@@ -1,2 +1,9 @@
 ---
-# tasks file for convert2virt
+
+# Ansible does not support looping over a block of tasks
+# Loop over instances from the inventory file
+- name: Convert single instance
+  include_tasks: convert_instance.yml
+  vars:
+    instance_id: "{{ item }}"
+  loop: "{{ instance_ids }}"

@@ -1,0 +1,26 @@
+---
+
+- name: Stop replacement instance
+  delegate_to: localhost
+  community.aws.ec2_instance:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled }}'
+    state: stopped
+    instance_ids:
+      - "{{ instance_id }}"
+
+- name: Get instance info
+  include_tasks: get_instance_information.yml
+
+- name: Clone Instance Volumes
+  include_tasks: clone_volumes.yml
+  vars:
+    block_device: "{{ item }}"
+  loop: "{{ instance_info.instances[0].block_device_mappings }}"
+
+#- name: Write out kubevirt config
+#  include_tasks: deploy_to_kubevirt.yml

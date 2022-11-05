@@ -1,3 +1,66 @@
 ---
 
+- name: Show block device mappings
+  debug:
+    var: block_device
 
+#- name: "Gather vol {{ block_device.ebs.volume_id }} info"
+#  delegate_to: localhost
+#  amazon.aws.ec2_vol_info:
+#    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+#    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+#    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+#    #profile: "{{ inject.profile | default(omit) }}"
+#    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+#    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+#    validate_certs: '{{ aws_ssl_enabled }}'
+#    filters:
+#      volume-id: '{{ block_device.ebs.volume_id }}'
+#  register: donor_volume
+#
+#- name: Show vol info
+#  debug:
+#    var: donor_volume
+#
+#- name: "Create Snapshot of {{ donor_instance.instance_id }} vol: {{ block_device.ebs.volume_id }}" 
+#  delegate_to: localhost
+#  amazon.aws.ec2_snapshot:
+#    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+#    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+#    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+#    #profile: "{{ inject.profile | default(omit) }}"
+#    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+#    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+#    validate_certs: '{{ aws_ssl_enabled }}'
+#    volume_id: '{{ block_device.ebs.volume_id }}'
+#    last_snapshot_min_age: 120
+#    description: "Snapshot of {{ block_device.ebs.volume_id }} destined for rhel-6-els from {{ donor_instance.instance_id }}"
+#    #snapshot_tags: "{{ inject.tags | combine({ 'Name': donor_instance.instance_id, 'els_status': 'active', 'els_stage':'one'}) }}"
+#    wait: yes
+#    wait_timeout: 7200
+#  register: donor_snapshot
+#
+#- name: Add snapshot to the main list
+#  set_fact:
+#    my_snaps: "{{ my_snaps + [donor_snapshot] }}"
+#
+#- name: "Create volume for {{ donor_snapshot.snapshot_id }}"
+#  delegate_to: localhost
+#  amazon.aws.ec2_vol:
+#    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+#    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+#    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+#    #profile: "{{ inject.profile | default(omit) }}"
+#    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+#    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+#    validate_certs: '{{ aws_ssl_enabled }}'
+#    snapshot: '{{ donor_snapshot.snapshot_id }}'
+#    volume_type: '{{ donor_volume.volumes[0].type }}'
+#    volume_size: '{{ donor_snapshot.volume_size }}'
+#    zone: '{{ donor_volume.volumes[0].zone }}'
+#    tags: '{{ donor_snapshot.tags }}'
+#  register: my_vol
+#
+#- name: Add volume to the main list
+#  set_fact:
+#    my_snaps: "{{ my_vols + [my_vol] }}"

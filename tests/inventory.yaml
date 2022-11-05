@@ -1,2 +1,7 @@
-localhost
-
+---
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      instance_ids:
+        - i-

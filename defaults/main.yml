@@ -1,2 +1,4 @@
 ---
 # defaults file for convert2virt
+
+aws_ssl_enabled: true
