@@ -88,12 +88,13 @@
     state: absent
 
 - name: Copy image to S3
-  command: aws s3 cp --acl public-read "/opt/volumes/{{ vol_info.device | replace('/','_') }}.img" "{{ s3_bucket }}/{{ s3_path }}"
+  command: |
+    aws s3 cp "/opt/volumes/{{ vol_info.device | replace('/','_') }}.img" "s3://{{ s3_bucket }}/{{ s3_path }}/" --acl public-read
 
 - name: Add image file to kubevirt list
   set_fact:
     my_raw_images: {
-    'device': "{{ block_device.device_name }}",
+    'device': "{{ vol_info.device }}",
     'location': "https://{{ s3_bucket }}.s3.amazonaws.com/{{ s3_path }}/{{ vol_info.device | replace('/','_') }}.img",
     'size': "{{ vol_info.volume_size }}"
     }
