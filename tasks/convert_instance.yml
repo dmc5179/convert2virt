@@ -1,5 +1,8 @@
 ---
 
+- debug:
+    var: instance_id
+
 - name: Stop replacement instance
   delegate_to: localhost
   community.aws.ec2_instance:
@@ -13,24 +16,68 @@
     instance_ids:
       - "{{ instance_id }}"
 
-- name: Get instance info
-  include_tasks: get_instance_information.yml
+- name: Gather information from target instance
+  delegate_to: localhost
+  delegate_facts: true
+  community.aws.ec2_instance_info:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled | default(omit) }}'
+    instance_ids:
+      - "{{ instance_id }}"
+  register: instance_info
 
-#- name: Initialize my_snaps to empty
-#  delegate_to: localhost
-#  set_fact:
-#    my_snaps: []
-#
-#- name: Initialize my_vols to empty
-#  delegate_to: localhost
-#  set_fact:
-#    my_vols: []
+#- debug:
+#    var: instance_info.instances[0].block_device_mappings
+
+#- fail:
+
+- name: Set empty vars
+  set_fact:
+    my_snaps: {}
+    my_vols: {}
 
 - name: Clone Instance Volumes
   include_tasks: clone_volumes.yml
   vars:
     block_device: "{{ item }}"
   loop: "{{ instance_info.instances[0].block_device_mappings }}"
+
+#- name: Set dummy snaps and vols
+#  set_fact:
+#    my_snaps: '{{ my_snaps | combine(
+#    {
+#    "device": "/dev/sda1",
+#    "snapshot_id": "snap-0f9c6c46b9732fc90"
+#    }) }}'
+#    my_vols: '{{ my_vols | combine(
+#    {
+#    "device": "/dev/sda1",
+#    "volume_id": "vol-0546a87ec717c7967"
+#    }) }}'
+
+- name: Show snaps
+  debug:
+    var: my_snaps
+
+- name: Show volumes
+  debug:
+    var: my_vols
+
+#- name: Stop here
+#  fail:
+
+- name: Copy volumes to raw images
+  include_tasks: create_volumes.yml
+  vars:
+    vol_info: "{{ vol }}"
+  loop:
+    - "{{ my_vols }}"
+  loop_control:
+    loop_var: vol
 
 #- name: Write out kubevirt config
 #  include_tasks: deploy_to_kubevirt.yml

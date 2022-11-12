@@ -1,5 +1,30 @@
 ---
 
+- name: Gather information from infra instance
+  delegate_to: localhost
+  delegate_facts: true
+  community.aws.ec2_instance_info:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled | default(omit) }}'
+    instance_ids:
+      - "{{ infra_instance }}"
+  register: infra_instance_info
+
+- name: Install dependencies on infra instance
+  become: true
+  dnf:
+    name: python3-pip
+    state: present
+
+- name: Install aws cli pip module
+  pip:
+    name: awscli
+    state: present
+
 # Ansible does not support looping over a block of tasks
 # Loop over instances from the inventory file
 - name: Convert single instance

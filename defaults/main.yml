@@ -2,3 +2,11 @@
 # defaults file for convert2virt
 
 aws_ssl_enabled: true
+
+# Bucket to place the dd raw image copies
+s3_bucket: "redhat-dan"
+s3_path: "convert2virt"
+
+# Host that will be used to attach the volumes
+# and create raw images with dd then upload to S3
+infra_instance_id:

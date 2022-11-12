@@ -1,3 +1,102 @@
 ---
 
+- debug:
+    msg: "Device: {{ vol_info.device }}"
 
+- debug:
+    msg: "Volume ID: {{ vol_info.volume_id }}"
+
+- name: Get infra host devices
+  command: lsblk
+  register: pre_list
+
+- name: "Attach volume to infra host"
+  delegate_to: localhost
+  amazon.aws.ec2_vol:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled }}'
+    instance: "{{ infra_instance }}"
+    id: "{{ vol_info.volume_id }}"
+
+- name: Wait for device to attach
+  pause:
+    seconds: 20
+
+- name: Get infra hosts devices
+  command: lsblk
+  register: post_list
+
+- name: Show devices pre
+  debug:
+    var: pre_list
+
+- name: Show devices post
+  debug:
+    var: post_list
+
+- name: Create directory for volume clone
+  become: true
+  file:
+    name: "/opt/volumes"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create a clone of the device
+  become: true
+  command: dd if=/dev/nvme1n1 of=/opt/volumes/{{ vol_info.device | replace('/','_') }}.img
+
+- name: Make sure clone is done
+  become: true
+  command: sync
+
+- name: Set permissions on image file
+  become: true
+  file:
+    name: "/opt/volumes/{{ vol_info.device | replace('/','_') }}.img"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Detach volume {{ vol_info.volume_id }} from infra host
+  delegate_to: localhost
+  amazon.aws.ec2_vol:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled }}'
+    instance: None
+    id: "{{ vol_info.volume_id }}"
+
+- name: Delete volume {{ vol_info.volume_id }}
+  delegate_to: localhost
+  amazon.aws.ec2_vol:
+    aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
+    aws_secret_key: "{{ ansible_env.AWS_SECRET_ACCESS_KEY | default(omit) }}"
+    security_token: "{{ ansible_env.AWS_SESSION_TOKEN | default(omit) }}"
+    region: "{{ ansible_env.AWS_DEFAULT_REGION | default(omit) }}"
+    ec2_url: '{{ aws_ec2_url | default(omit) }}'
+    validate_certs: '{{ aws_ssl_enabled }}'
+    id: "{{ vol_info.volume_id }}"
+    state: absent
+
+- name: Copy image to S3
+  command: aws s3 cp --acl public-read "/opt/volumes/{{ vol_info.device | replace('/','_') }}.img" "{{ s3_bucket }}/{{ s3_path }}"
+
+- name: Add image file to kubevirt list
+  set_fact:
+    my_raw_images: {
+    'device': "{{ block_device.device_name }}",
+    'location': "https://{{ s3_bucket }}.s3.amazonaws.com/{{ s3_path }}/{{ vol_info.device | replace('/','_') }}.img"
+    }
+
+- name: Show s3 https location of image file
+  debug:
+    var: my_raw_images

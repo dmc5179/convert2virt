@@ -21,7 +21,7 @@
   debug:
     var: donor_volume
 
-- name: "Create Snapshot of {{ donor_instance.instance_id }} vol: {{ block_device.ebs.volume_id }}" 
+- name: "Create Snapshot of {{ infra_instance }} vol: {{ block_device.ebs.volume_id }}" 
   delegate_to: localhost
   amazon.aws.ec2_snapshot:
     aws_access_key: "{{ ansible_env.AWS_ACCESS_KEY_ID | default(omit) }}"
@@ -32,16 +32,20 @@
     validate_certs: '{{ aws_ssl_enabled }}'
     volume_id: '{{ block_device.ebs.volume_id }}'
     last_snapshot_min_age: 120
-    description: "Snapshot of {{ block_device.ebs.volume_id }} destined for kubevirt {{ donor_instance.instance_id }}"
+    description: "Snapshot of {{ block_device.ebs.volume_id }} destined for kubevirt {{ infra_instance }}"
     snapshot_tags:
-      Name: "Snapshot of {{ block_device.ebs.volume_id }} destined for kubevirt {{ donor_instance.instance_id }}"
+      Name: "Snapshot of {{ block_device.ebs.volume_id }} destined for kubevirt {{ infra_instance }}"
     wait: yes
     wait_timeout: 7200
   register: donor_snapshot
 
+  # This only supports an instance with the main root volume
 - name: Add snapshot to the main list
   set_fact:
-    my_snaps: "{{ my_snaps | default([]) + [{block_device.device_name: donor_snapshot.snapshot_id}] }}"
+    my_snaps: {
+    'device': "{{ block_device.device_name }}",
+    'snapshot_id': "{{ donor_snapshot.snapshot_id }}"
+    }
 
 - name: "Create volume for {{ donor_snapshot.snapshot_id }}"
   delegate_to: localhost
@@ -55,10 +59,14 @@
     snapshot: '{{ donor_snapshot.snapshot_id }}'
     volume_type: '{{ donor_volume.volumes[0].type }}'
     volume_size: '{{ donor_snapshot.volume_size }}'
-    zone: '{{ donor_volume.volumes[0].zone }}'
+    zone: "{{ infra_instance_info.instances[0].placement.availability_zone }}"
     tags: '{{ donor_snapshot.tags }}'
   register: my_vol
 
+  # This only supports an instance with the main root volume
 - name: Add volume to the main list
   set_fact:
-    my_vols: "{{ my_vols | default([]) + [{block_device.device_name: my_vol.volume_id}] }}"
+    my_vols: {
+    'device': "{{ block_device.device_name }}",
+    'volume_id': "{{ my_vol.volume_id }}"
+    }
