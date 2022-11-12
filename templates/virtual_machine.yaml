@@ -4,12 +4,12 @@ metadata:
   creationTimestamp: null
   labels:
     kubevirt.io/vm: vm-fedora-datavolume
-  name: vm-fedora-datavolume 1
+  name: vm-fedora-datavolume
 spec:
   dataVolumeTemplates:
   - metadata:
       creationTimestamp: null
-      name: fedora-dv 2
+      name: fedora-dv
     spec:
       storage:
         resources:
@@ -17,10 +17,10 @@ spec:
             storage: 10Gi
         storageClassName: local
       source:
-        http: 3
-          url: "https://mirror.arizona.edu/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-35-1.2.x86_64.qcow2" 4
-          secretRef: endpoint-secret 5
-          certConfigMap: "" 6
+        http:
+          url: "https://mirror.arizona.edu/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-35-1.2.x86_64.qcow2"
+          secretRef: endpoint-secret
+          certConfigMap: ""
     status: {}
   running: true
   template:
