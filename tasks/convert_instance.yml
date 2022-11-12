@@ -79,5 +79,13 @@
   loop_control:
     loop_var: vol
 
+- name: Create kubevirt template file
+  delegate_to: localhost
+  ansible.builtin.template:
+    src: virtual_machine.yaml.j2
+    dest: /tmp/virtual_machine.yaml
+    mode: '0644'
+    force: true
+
 #- name: Write out kubevirt config
 #  include_tasks: deploy_to_kubevirt.yml
