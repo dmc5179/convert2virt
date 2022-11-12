@@ -68,5 +68,6 @@
   set_fact:
     my_vols: {
     'device': "{{ block_device.device_name }}",
-    'volume_id': "{{ my_vol.volume_id }}"
+    'volume_id': "{{ my_vol.volume_id }}",
+    'volume_size' : "{{ donor_snapshot.volume_size }}"
     }

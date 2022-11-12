@@ -14,11 +14,11 @@ spec:
       storage:
         resources:
           requests:
-            storage: 10Gi
+            storage: "{{ my_raw_images.size }}Gi"
         storageClassName: local
       source:
         http:
-          url: "https://mirror.arizona.edu/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-35-1.2.x86_64.qcow2"
+          url: "{{ my_raw_images.location }}"
           secretRef: endpoint-secret
           certConfigMap: ""
     status: {}
