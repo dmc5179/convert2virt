@@ -30,9 +30,19 @@
       - "{{ instance_id }}"
   register: instance_info
 
-#- debug:
-#    var: instance_info.instances[0].block_device_mappings
+- name: Get size of memory for target instance type
+  delegate_to: localhost
+  command: |
+    aws ec2 describe-instance-types --instance-types {{instance_info.instances[0].instance_type}} --query 'InstanceTypes[0].MemoryInfo.SizeInMiB'
+  register: instance_type_info
 
+- name: Set fact for instance memory size in MiB
+  set_fact:
+    instance_memory: "{{ instance_type_info.stdout }}"
+
+#- debug:
+#    var: instance_info.instances[0]
+#
 #- fail:
 
 - name: Set empty vars
