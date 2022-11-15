@@ -11,4 +11,4 @@ storage_class: "gp3-csi"
 
 # Host that will be used to attach the volumes
 # and create raw images with dd then upload to S3
-infra_instance_id:
+infra_instance:
