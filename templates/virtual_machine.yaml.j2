@@ -15,12 +15,12 @@ spec:
         resources:
           requests:
             storage: "{{ my_raw_images.size }}Gi"
-        storageClassName: local
+        storageClassName: "{{ storage_class }}"
       source:
         http:
           url: "{{ my_raw_images.location }}"
-          secretRef: endpoint-secret
-          certConfigMap: ""
+          #secretRef: endpoint-secret
+          #certConfigMap: ""
     status: {}
   running: true
   template:
